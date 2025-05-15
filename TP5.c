@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+__asm{
 push ebp
 mov ebp, esp
+}
 
 void procesarImagen(unsigned char * imagenIn, unsigned char * mensajeOut, unsigned int tamanio, unsigned char k)
 {
@@ -117,4 +120,4 @@ void ingresarBits(unsigned char * mensajeOut, unsigned char bitsAInsertar, unsig
         endif:
         nop ; No quiero hacer nada despues de la etiqueta pero tengo que poner esto o al compilador no le gusta
     }
-			  
+}  
