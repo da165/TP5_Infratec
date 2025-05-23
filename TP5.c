@@ -51,30 +51,38 @@ int main()
 void procesarImagen(unsigned char * imagenIn, unsigned char * mensajeOut, unsigned int tamanio, unsigned char k)
 {
 	__asm {
-		mov ebx, 0 ; se establece un i = 0 en ebx para el forloop
-
+        push eax ; como la funcion es void, se puede usar eax sin tener que retornarlo, cierto???? o no se
+        push ebx
+        push ecx 
+        push edx 
+        push esi 
+        push edi
+		
+        mov ebx, 0 ; se establece un i = 0 en ebx para el forloop
         ; ----- inicio for -----
         forloop: 
-        cmp ebx, [ebp+12];  se establece una comparacion entre i (ebx)  y tamanio ([ebp+12])
+        cmp ebx, [ebp+16]   ;  se establece una comparacion entre i (ebx)  y tamanio ([ebp+16])
 		jge finLoop ; va a fin del loop si no se cumple la condicion de i < tamanio
         
-        mov ecx, [ebp+20+ebx*4] ; En ebp+20 estaria * imagenIn. Si le sumo i*4, o sea ebx*4, me quedo con imagenIn[i]... creo
+        mov edi, [ebp+8] ; En ebp+8 estaria imagenIn.
+        mov cl [edi+ebx]    ; Desde imagenIn hacemos un desplazamiento para llegar a imagenIn[i]
+        
         mov edx, 1  ; Guardo el numero 1 para hacer la operacion de bit shifting
-        shl edx, [ebp+8]    ; Al 1 se le hace bit shifting por k unidades. k = ebp+8
+        movzx esi, [ebp+20]  ; Muevo a k a esi, agregando ceros al final para tener el tamaño correcto
+        shl edx, esi   ; Al 1 se le hace bit shifting por k unidades. k = esi
         dec edx     ; Ya se hizo (1 << k). Ahora solo queda hacerle -1 a esto.
-        and ecx, edx    ; Uso el operador AND entre imagenIn[i] y ((1 << k) - 1). Ahora, ECX es byteActual
+        and cl, edx    ; Uso el operador AND entre imagenIn[i] y ((1 << k) - 1). Ahora, ECX es byteActual
 
 		push ebx    ; push i para la funcion ingresar bits
-		push [ebp+8]    ; push k para la funcion ingresar bits
+		push [ebp+20]    ; push k para la funcion ingresar bits
 		push ecx    ; push byteActual para la funcion ingresar bits
-		push ebp+20    ; push mensajeOut (puntero) para la funcion ingresar bits. PREGUNTAR SI ESTO ES ASI!!!!
-		
+		push ebp+8    ; push mensajeOut (puntero) para la funcion ingresar bits. PREGUNTAR SI ESTO ES ASI!!!!
         call ingresarBits
-		add esp, 16
-		inc ebp
-		jmp loop:
+		add esp, 16 ; toca hacer algo mas aca al hacer call ??????????????
+		jmp forloop:
         ; ----- fin for -----
 	finLoop:
+        ; toca hacer pop????
 		ret ; esto se hace????
 	
 
@@ -86,7 +94,7 @@ void procesarImagen(unsigned char * imagenIn, unsigned char * mensajeOut, unsign
         ; [ebp+20] = mensajeOut? direccion o primer valor?
 
         ingresarBits:
-        mov edi, numComponente  ; guarda el valor de numComponente en edi
+        mov ebx, [ebp+8]  ; guarda el valor de numComponente en ebx
         imul edi, k     ; multiplica edi (numComponente) por k. Esto ahora es currentFullIndex.
         
         mov esi, edi   ; mueve currentFullIndex a esi
