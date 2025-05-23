@@ -1,34 +1,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-__asm{
-push ebp
-mov ebp, esp
+void procesarImagen(unsigned char *, unsigned char *, unsigned int, unsigned char);
+
+int main()
+{
+    unsigned int numPixeles = 0;
+    unsigned int bytesTotales = 0;
+    unsigned char k = 0;
+    printf("Ingresa el tamanio (num de pixeles) que la imagen tiene:\n");
+    scanf("%u",&numPixeles);
+
+    bytesTotales = numPixeles*3;	// Cada pixel tiene 3 colores RGB, entonces esa es la cantidad de bytes que se necesitan.
+
+    while (!(0 < k && k < 8)) // Bucle para que el codigo se mantenga aca hasta que el usuario de una entrada aceptable.
+    {
+        printf("Ingresa la cantidad de bits menos significativos a recuperar:\n");
+        scanf("%hhu",&k);
+        if (!(0 < k && k < 8)){
+            printf("El numero debe ser un entero 0 < k < 8. Intentar de nuevo\n");
+        }
+    }
+
+    unsigned char * imagenIn = (unsigned char *) calloc(bytesTotales, 1);	// Hago este vector con calloc, y reservo cantidad bytesTotales de espacio. Cada char es un byte, asi que el segundo parametro es 1.
+    unsigned char * mensajeOut = (unsigned char *) calloc(((bytesTotales * k)+7)/8, 1); // Lo mismo que el anterior, pero como este tiene el mensaje tengo que conseguir los bits totales que se conseguiran
+																						// multiplicando cada byte por k (cantidad de bits que se guardan para cada byte entrada), le sumo 7 para que no se pierda
+																						// en el peor caso algun bit al realizar la division entre 8 para llegar a unidad de bytes.
+
+    printf("Ahora ingresa cada byte de los colores de cada pixel de la imagen en hexadecimal. Despues de escribir un byte, oprime enter antes de escribir el proximo (no dejes espacios).\n");
+    for (int i = 0; i < bytesTotales; i++)
+    {
+        scanf("%hhx", &imagenIn[i]); // Lee hexas proporcional al tamaño que el usuario haya dicho al inicio y los guarda en la posicion adecuada en el vector de imagenIn
+    }
+
+    procesarImagen(imagenIn, mensajeOut, bytesTotales, k);
+
+    unsigned int tamanioMensaje = (bytesTotales * k + 7) / 8;	// Saca cuantos bits tiene el mensaje oculto y lo convierte a bytes
+    printf("El mensaje oculto dentro de esta imagen es:\n");
+    for (unsigned int i = 0; i < tamanioMensaje; i++)
+    {
+        printf("%c", mensajeOut[i]); // Imprime cada char sequencialmente.
+    }
+    
+	free(imagenIn);
+	free(mensajeOut);
+	
+    return 0;
 }
 
 void procesarImagen(unsigned char * imagenIn, unsigned char * mensajeOut, unsigned int tamanio, unsigned char k)
 {
 	__asm {
-		push ebp
-		mov ebp, esp
-		; imagenIn en ebx
-		; mensajeOut en esi
-		; tamanio en edi
-		; [k] en ecx
-		; i en ebp
-		; byteActual en al
-		
-		mov ebx, [ebp+4]
-		mov esi, [ebp+8]
-		mov edi, [ebp+12]
-		mov ecx, [ebp+16]
-		mov ebp,0
-		cmp ebp, 0;  i = 0 se compara si es igual a cero
-		jne salirCodigo:
-		loop:
-		cmp ebp, edi ; si i >= tamanio, salta al final
-		jge finLoop:
-		mov al, [ebx+ebp]
+		mov eax, 0 ; i = 0
+
+        forloop:
+        cmp eax, [ebp+12];  se compara i (eax)  y tamanio ([ebp+12])
+		jge finLoop ; va a fin del loop si no se cumple la condicion i < tamanio
+        mov ecx, [ebp+20+eax*4] ; ebp+20 + eax*4= imagenIn[0+i]
+        mov edx, 1
+        shl edx, [ebp+8]
+        ; de acá a arriba edité código. La anterior línea comenzó a hacer esto: imagenIn[i] & ((1 << k) - 1). Pero realmente solo se ha guardado imagenIn[i] en ecx y se ha hecho un 1 << k en edx. Falta hacer el resto de la operación.
+		mov bl, [ebx+ebp]
 		mov edx,0
 		shl ecx,1
 		sub ecx,edx
@@ -45,13 +77,7 @@ void procesarImagen(unsigned char * imagenIn, unsigned char * mensajeOut, unsign
 		jmp loop:
 	finLoop:
 		ret
-		
-		
-		
-		
-		
-		
-		 
+	
 	}
 	
 	
