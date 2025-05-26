@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+// Trabajo realizado por: Daniel Alejandro Ocampo Lozano - 202410656 - d.ocampol@uniandes.edu.co y por David Alfonso Ortiz - 202411216 - da.ortiza1@uniandes.edu.co
 void procesarImagen(unsigned char *, unsigned char *, unsigned int, unsigned char);
 void ingresarBits(unsigned char *, unsigned char, unsigned char, unsigned int); 
 void insert_bits(char *, unsigned char, int, int);
